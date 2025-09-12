@@ -1,0 +1,43 @@
+# Node
+node_modules/
+/.pnp/
+.pnp.js
+/.next/
+dist/
+out/
+.vercel/
+
+# pnpm
+node_modules/
+pnpm-lock.yaml
+.pnpm-store/
+
+# TypeScript
+*.tsbuildinfo
+
+# Next.js build
+/.next/
+build/
+
+# Python
+venv/
+env/
+backend/.venv/
+__pycache__/
+*.pyc
+
+# Uploads and media
+/uploads/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
