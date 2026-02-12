@@ -6,7 +6,7 @@
 		"build": "next build",
 		"dev": "run-p dev:backend dev:frontend",
 		"dev:frontend": "next dev -p 3000",
-		"dev:backend": "bash -lc 'source backend/.venv/bin/activate 2>/dev/null || python3 -m venv backend/.venv && source backend/.venv/bin/activate; pip install -r backend/requirements.txt; uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000'",
+		"dev:backend": "node scripts/start-backend.js",
 		"lint": "next lint",
 		"start": "next start"
 	},
