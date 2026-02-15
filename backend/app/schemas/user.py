@@ -8,13 +8,13 @@ class UserBase(BaseModel):
     age: Optional[int] = Field(default=None, ge=0, le=150)
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=6)
+    password: str = Field(..., min_length=6, max_length=72)
 
 class UserUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=100)
     email: Optional[EmailStr] = None
     age: Optional[int] = Field(default=None, ge=0, le=150)
-    password: Optional[str] = Field(default=None, min_length=6)
+    password: Optional[str] = Field(default=None, min_length=6, max_length=72)
     avatar: Optional[str] = None
 
 class UserOut(UserBase):
@@ -34,3 +34,10 @@ class TokenData(BaseModel):
 class Login(BaseModel):
     email: EmailStr
     password: str
+
+class ForgotPassword(BaseModel):
+    email: EmailStr
+
+class ResetPassword(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=6, max_length=72)

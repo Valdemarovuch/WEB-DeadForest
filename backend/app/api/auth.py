@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from ..core.database import get_db
 from ..models.user import User
-from ..schemas.user import UserOut, UserCreate, Token, UserUpdate
-from ..core.auth import get_password_hash, verify_password, create_access_token, oauth2_scheme, decode_token
+from ..schemas.user import UserOut, UserCreate, Token, UserUpdate, ForgotPassword, ResetPassword
+from ..core.auth import get_password_hash, verify_password, create_access_token, oauth2_scheme, decode_token, generate_reset_token
 from ..core.logger import audit
 
 router = APIRouter()
@@ -92,3 +92,73 @@ def update_me(payload: UserUpdate, token: str = Depends(oauth2_scheme), db: Sess
     db.commit()
     db.refresh(user)
     return user
+
+@router.post("/forgot-password")
+def forgot_password(payload: ForgotPassword, db: Session = Depends(get_db)):
+    """Request password reset - generates a reset token"""
+    user = db.query(User).filter(User.email == payload.email).first()
+    
+    # Always return success to prevent email enumeration
+    if not user:
+        return {"message": "If the email exists, a reset link has been sent"}
+    
+    # Generate reset token and set expiration (1 hour)
+    reset_token = generate_reset_token()
+    user.reset_token = reset_token
+    user.reset_token_expires = datetime.now(timezone.utc) + timedelta(hours=1)
+    db.commit()
+    
+    # In production, send email with reset link
+    # For development, we'll log the token
+    try:
+        audit("auth.forgot_password", actor_id=user.id, target=user.email, 
+              metadata={"reset_token": reset_token})
+    except Exception:
+        pass
+    
+    # In dev mode, return the token (remove in production!)
+    import os
+    if os.getenv("DEV_MODE", "true").lower() == "true":
+        return {
+            "message": "Reset token generated",
+            "reset_token": reset_token,
+            "reset_url": f"/reset-password?token={reset_token}"
+        }
+    
+    return {"message": "If the email exists, a reset link has been sent"}
+
+@router.post("/reset-password")
+def reset_password(payload: ResetPassword, db: Session = Depends(get_db)):
+    """Reset password using a valid reset token"""
+    user = db.query(User).filter(User.reset_token == payload.token).first()
+    
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    
+    # Check if token is expired
+    if not user.reset_token_expires:
+        raise HTTPException(status_code=400, detail="Reset token has expired")
+    
+    # Handle both timezone-aware and timezone-naive datetimes
+    now = datetime.now(timezone.utc)
+    expires = user.reset_token_expires
+    
+    # If expires is naive, make it timezone-aware (assume UTC)
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    
+    if expires < now:
+        raise HTTPException(status_code=400, detail="Reset token has expired")
+    
+    # Update password and clear reset token
+    user.password_hash = get_password_hash(payload.new_password)
+    user.reset_token = None
+    user.reset_token_expires = None
+    db.commit()
+    
+    try:
+        audit("auth.password_reset", actor_id=user.id, target=user.email)
+    except Exception:
+        pass
+    
+    return {"message": "Password successfully reset"}

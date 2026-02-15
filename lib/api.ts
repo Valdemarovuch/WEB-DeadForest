@@ -203,6 +203,12 @@ export const AuthApi = {
     }
     return (await res.json()) as { avatar: string }
   },
+  forgotPassword: async (email: string) => {
+    return apiFetch("/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) })
+  },
+  resetPassword: async (token: string, newPassword: string) => {
+    return apiFetch("/auth/reset-password", { method: "POST", body: JSON.stringify({ token, new_password: newPassword }) })
+  },
 }
 
 export const UsersApi = {

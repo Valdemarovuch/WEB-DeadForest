@@ -43,7 +43,12 @@ export default function LoginPage() {
                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <label className="text-sm">Password</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">Password</label>
+                  <Link href="/forgot-password" className="text-sm text-primary underline hover:no-underline">
+                    Forgot password?
+                  </Link>
+                </div>
                 <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
               {error && <div className="text-sm text-red-500">{error}</div>}
