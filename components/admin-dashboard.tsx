@@ -7,7 +7,7 @@ import { TrendingUp, ShoppingCart, DollarSign, Package, Eye, EyeOff } from "luci
 import { AdminApi } from "@/lib/api"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Legend } from "recharts"
 
 type Stats = {
   total_revenue: number
@@ -145,18 +145,83 @@ export function AdminDashboard() {
           {!tsLoading && !tsError && (
             <ChartContainer
               config={{
-                revenue: { label: "Revenue", color: "hsl(var(--primary))" },
-                orders: { label: "Orders", color: "hsl(var(--muted-foreground))" },
+                revenue: { 
+                  label: "Revenue ($)", 
+                  color: "hsl(142, 76%, 36%)",
+                  theme: {
+                    light: "hsl(142, 76%, 36%)",
+                    dark: "hsl(142, 76%, 45%)"
+                  }
+                },
+                orders: { 
+                  label: "Orders", 
+                  color: "hsl(217, 91%, 60%)",
+                  theme: {
+                    light: "hsl(217, 91%, 50%)",
+                    dark: "hsl(217, 91%, 60%)"
+                  }
+                },
               }}
-              className="w-full"
+              className="w-full h-[350px]"
             >
-              <AreaChart data={tsData} margin={{ left: 12, right: 12, top: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                <XAxis dataKey="bucket" tickLine={false} axisLine={false} minTickGap={24} />
-                <YAxis tickLine={false} axisLine={false} width={48} />
+              <AreaChart data={tsData} margin={{ left: 12, right: 12, top: 8, bottom: 8 }}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="hsl(142, 76%, 36%)" stopOpacity={0.05}/>
+                  </linearGradient>
+                  <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="hsl(217, 91%, 60%)" stopOpacity={0.05}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" vertical={false} />
+                <XAxis 
+                  dataKey="bucket" 
+                  tickLine={false} 
+                  axisLine={false} 
+                  minTickGap={24}
+                  className="text-xs text-muted-foreground"
+                />
+                <YAxis 
+                  yAxisId="left"
+                  tickLine={false} 
+                  axisLine={false} 
+                  width={60}
+                  className="text-xs text-muted-foreground"
+                  tickFormatter={(value) => `$${value}`}
+                />
+                <YAxis 
+                  yAxisId="right"
+                  orientation="right"
+                  tickLine={false} 
+                  axisLine={false} 
+                  width={40}
+                  className="text-xs text-muted-foreground"
+                />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Area type="monotone" dataKey="revenue" stroke="var(--color-revenue)" fill="var(--color-revenue)" fillOpacity={0.2} />
-                <Area type="monotone" dataKey="orders" stroke="var(--color-orders)" fill="var(--color-orders)" fillOpacity={0.15} />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '20px' }}
+                  iconType="line"
+                />
+                <Area 
+                  yAxisId="left"
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="hsl(142, 76%, 36%)" 
+                  strokeWidth={2.5}
+                  fill="url(#colorRevenue)"
+                  name="Revenue ($)"
+                />
+                <Area 
+                  yAxisId="right"
+                  type="monotone" 
+                  dataKey="orders" 
+                  stroke="hsl(217, 91%, 60%)" 
+                  strokeWidth={2}
+                  fill="url(#colorOrders)"
+                  name="Orders"
+                />
               </AreaChart>
             </ChartContainer>
           )}
